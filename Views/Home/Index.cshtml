@@ -1,0 +1,159 @@
+﻿        <center><h3>My Toys Collection</h3></center>
+        
+        <br />
+        <div class="table-responsive">
+            <table class="r" id="ToyTable">
+                <thead>
+                    <tr>
+                        <th> Toy Name <input class="" id="name" type="text" placeholder="enter toy name..."/> </th>
+                        <th> Manufacturer <input class="" id="manuf" type="text" placeholder="enter manufacturer..."/></th>
+                        <th> Color <input class="" id="color" type="text" placeholder="enter color..."/></th>
+                        <th> Price <input class="" id="price" type="number" placeholder="enter price..."/></th>
+                        <th> Age Group <input class="" id="ag" type="text"  placeholder="select age group.."/></th>
+                        <th width="150px"><input class="btn-add" type="button" id="insert" value="Add" onclick='AddToy(this)' />  </th>
+                    </tr>
+                </thead>
+            </table>
+
+        </div>
+   
+    <br />
+   
+   
+    <script>
+        // Toy structure to store and save data
+        var Toy = { ToyId: 0, ToyName: "", ToyManufacturer:"", ToyColor: "", ToyPrice: 0, AgeGroup: "10+" }
+        $(document).ready(function () { fetchToyList(); });
+        // show all the Toys data
+        function ShowToyItems(ToyItems) {
+            // Iterate over the collection of data
+            $("#ToyTable tbody").remove();
+            $.each(ToyItems, function (index, Toyitem) {
+                // Add new row to the ToyTable
+                AddNewTableRow(Toyitem);
+            });
+        }
+        // Add a row to the ToyTable
+        function AddNewTableRow(Toyitem) {
+            // make sure  <tbody> tag exists
+            if ($("#ToyTable tbody").length == 0) {
+                // add one if not
+                $("#ToyTable").append("<tbody></tbody>");
+            }
+            // at the end Append row
+            $("#ToyTable tbody").append(
+                CreateTableBodyStructure(Toyitem));
+        }
+        // construct Table body
+        function CreateTableBodyStructure(Toyitem) {
+            // building row for table 
+            var Row = "<tr>" +
+                                "<td><input   class='name' type='text' value='" + Toyitem.ToyName + "'/></td>" +
+                                "<td><input  class='manuf'  type='text' value='" + Toyitem.ToyManufacturer + "'/></td>" +
+                                "<td><input  class='color' type='text' value='" + Toyitem.ToyColor + "'/></td>" +
+                                "<td><input  class='price' type='number' value='" + Toyitem.ToyPrice + "'/></td>" +
+                                "<td><input  class='ag' type='text' value='" + Toyitem.AgeGroup + "'/></td>" +
+                                "<td>" +"<button type='button' "+"onclick='ToyUpdate(this);' "+"class='btn-update' "+"data-id='"+Toyitem.ToyId + "' "+"data-name='" + Toyitem.ToyName + "' "+"data-manuf='"+Toyitem.ToyManufacturer+"' "+"data-color='"+Toyitem.ToyColor+"' "+"data-ag='" + Toyitem.AgeGroup + "' " +">" +"Update" +"</button> " +" <button type='button' " +"onclick='ToyDelete(this);'" +"class='btn-delete' " +"data-id='" + Toyitem.ToyId + "'>" +"Delete" +"</button>" +"</td>" +
+                        "</tr>";
+            return Row;
+        }
+        // adds new Toy
+        function AddToy(item) {
+            var optionsAjax = {};
+            optionsAjax.url = "/api/Toys";
+            optionsAjax.type = "POST";
+            var Toystruct = Toy;
+            Toystruct.ToyName = $("#name").val();
+            Toystruct.ToyManufacturer = $("#manuf").val();
+            Toystruct.ToyColor = $('#color').val();
+            Toystruct.ToyPrice = $('#price').val();
+            Toystruct.AgeGroup = $('#ag').val();
+
+            optionsAjax.contentType = "application/json";
+            optionsAjax.dataType = "html";
+            optionsAjax.data = JSON.stringify(Toystruct);
+            optionsAjax.success = function (msg) {
+                // update list
+                fetchToyList();
+                // show message
+                $.notify("Toy Added Successfully","success");
+                
+            },
+                optionsAjax.error = function () {
+                    $.notify("add Toy error", "error");
+                };
+            $.ajax(optionsAjax);
+        }
+
+        // to update Toy data
+        function ToyUpdate(item) {
+            var id = $(item).data("id");
+            var optionsAjax = {};
+            optionsAjax.url = "/api/Toys/" + id
+            optionsAjax.type = "PUT";
+
+            var Toystruct = Toy;
+            Toystruct.ToyId = $(item).data("id");
+            Toystruct.ToyName = $("#name").val();
+            Toystruct.ToyManufacturer = $("#manuf").val();
+            Toystruct.ToyColor = $('#color').val();
+            Toystruct.ToyPrice = $('#price').val();
+            Toystruct.AgeGroup = $('#ag').val();
+
+            optionsAjax.contentType = "application/json";
+            optionsAjax.dataType = "html";
+            optionsAjax.data = JSON.stringify(Toystruct);
+            optionsAjax.success = function (msg) {
+                $.notify("Toy item updated successfully","success");
+            };
+            optionsAjax.error = function () {
+                $.notify("Toy Update Error!","error");
+            };
+            $.ajax(optionsAjax);
+        }
+
+        // to delete Toy data
+        function ToyDelete(item) {
+            var id = $(item).data("id");
+            var optionsAjax = {};
+            optionsAjax.url = "/api/Toys/" + id;
+            optionsAjax.type = "DELETE";
+            optionsAjax.dataType = "html";
+            optionsAjax.success = function (msg) {
+
+                $.notify("Toy Item deleted Successfully","success");
+                fetchToyList();
+            };
+            optionsAjax.error = function () {
+                $.notify("Toy delete error","error");
+            };
+            $.ajax(optionsAjax);
+        }
+
+
+        //fetch all the Toys data from API
+        function fetchToyList() {
+            // Calling API AJX
+            $.ajax({
+                url: '/api/Toys/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (ToyItems) {
+                    ShowToyItems(ToyItems);
+                },
+                error: function (request, message, error) {
+                    ShowErrorMessage(request, message, error);
+                }
+            });
+        }
+        // When error occurs this functon acts
+        function ShowErrorMessage(request, message, error) {
+            var msg = "";
+            msg += "Code: " + request.status + "\n";
+            msg += "Text: " + request.statusText + "\n";
+            if (request.responseJSON != null) {
+                msg += "Message" + request.responseJSON.Message + "\n";
+            }
+            $.notify(msg);
+        }
+    </script>
